@@ -3,7 +3,7 @@
 ### Problem Definition:
 **Target**
 
-Vorhersage, ob der Preis von BTC/USD in den nächsten t = [5, 10, 15, 30, 60, 120, 240] Minuten steigt oder fällt in einem Zeitraum vom 01.01.2018 bis 15.11.2025
+Vorhersage, ob der Preis von BTC/USD in den nächsten t = [5, 10, 15, 30, 60, 120, 240] Minuten steigt oder fällt in einem Zeitraum vom 01.01.2021 bis 15.11.2025
 Dazu wird der Trend berechnet durch:
 - lineare Regression des zukünftigen Preisfensters
 - Normalisierung des Slopes durch den Durchschnittspreis
