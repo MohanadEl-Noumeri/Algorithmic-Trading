@@ -37,3 +37,21 @@ Volumen-Feature
 - Training eines neuronalen Netzwerks auf Basis dieser Features zur Vorhersage der kurzfristigen Trendrichtung (binäre Klassifikation) und Evaluation mittels zeitbasierter Train-/Validation-/Test-Splits.
 - Optionales Backtesting der Modellvorhersagen in einer simplen Trading-Strategie: Long-Positionen bei positiven Trendvorhersagen eröffnen und für die jeweilige Dauer t halten.
 
+Data Acquisition
+
+Für die Datenerhebung verwenden wir ausschließlich programmatisch abrufbare historische Marktdaten. Unser Ziel ist es, eine konsistente, lückenfreie 1-Minuten-Zeitreihe für BTC/USD und ETH/USD aufzubauen, die anschließend als Basis für Feature Engineering und Modelltraining dient.
+
+Abruf der historischen 1-Minute-OHLCV-Daten über die Alpaca Crypto API für den Zeitraum 01.01.2018 – 15.11.2025.
+
+Nutzung der Endpunkte für historische Bars mit den Parametern:
+symbol = {BTC/USD, ETH/USD}, timeframe = 1Min, start, end, limit-Pagination, UTC-Zeitzone.
+
+Die Daten werden iterativ in Blöcken geladen, geprüft (monotone Zeitstempel, Duplikate, fehlende Minuten) und anschließend als raw CSV sowie zusätzlich als Parquet-Dateien gespeichert, um effizientes späteres Processing zu ermöglichen.
+
+Speicherung erfolgt in einer klar getrennten Ordnerstruktur: raw (unverändert), staged (bereinigt) und processed (Feature-Versionen).
+
+Zusätzlich verwenden wir Logging, um API-Requests, Pagination und mögliche Rate-Limit-Retries vollständig reproduzierbar zu dokumentieren.
+
+Die Rohdaten enthalten open, high, low, close, volume sowie Zeitstempel. Ein Beispielausschnitt der Originaldaten wurde im Projektprotokoll festgehalten.
+
+Durch diesen strukturierten Download-Prozess stellen wir sicher, dass die Datengrundlage vollständig, konsistent und für alle weiteren Schritte im Machine-Learning-Prozess verlässlich nutzbar ist.
