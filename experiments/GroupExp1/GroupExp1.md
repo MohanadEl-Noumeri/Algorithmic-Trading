@@ -47,7 +47,7 @@ Extrahiert Rohdaten für BTC/USD und ETH/USD von der Alpaca Crypto API.
 
 [scripts/01_data_acquisition/crypto_data_acquisition.py](scripts/01_data_acquisition/crypto_data_acquisition.py)
 
-Ruft 1-Minuten Daten von 2018-01-01 bis 2025-11-15 ab jeweils für BTC/USD und ETH/USD und speichert sie als .csv sowie .parquet Dateien in:
+Ruft 1-Minuten Daten von 2021-01-01 bis 2025-11-15 ab jeweils für BTC/USD und ETH/USD und speichert sie als .csv sowie .parquet Dateien in:
 [data](data)
 
 
