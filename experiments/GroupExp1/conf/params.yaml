@@ -2,7 +2,7 @@
 ---
 
 DATA_ACQUISITON:
-  DATA_PATH: "data"
+  DATA_PATH: "../../data"
   START_DATE: "2018-01-01"
   END_DATE: "2025-11-15"
 DATA_PREP:

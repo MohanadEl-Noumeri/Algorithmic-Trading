@@ -6,6 +6,8 @@ from alpaca.data.timeframe import TimeFrame
 import pandas as pd
 from datetime import datetime
 import yaml
+from pathlib import Path
+
 
 # --- 1. API Credentials laden ---
 keys = yaml.safe_load(open("../../conf/keys.yaml"))
@@ -17,6 +19,10 @@ params = yaml.safe_load(open("../../conf/params.yaml"))
 PATH_BARS = params['DATA_ACQUISITON']['DATA_PATH']
 START_DATE = datetime.strptime(params['DATA_ACQUISITON']['START_DATE'], "%Y-%m-%d")
 END_DATE = datetime.strptime(params['DATA_ACQUISITON']['END_DATE'], "%Y-%m-%d")
+
+# sicherstellen, dass das Zielverzeichnis existiert
+base_path = Path(PATH_BARS)
+base_path.mkdir(parents=True, exist_ok=True)
 
 # --- 3. Alpaca Crypto Client initialisieren ---
 client = CryptoHistoricalDataClient(api_key=API_KEY, secret_key=SECRET_KEY)
