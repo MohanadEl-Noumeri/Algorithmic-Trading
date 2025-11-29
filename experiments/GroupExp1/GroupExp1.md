@@ -29,10 +29,10 @@ Trend-Features
 Volumen-Feature
 - Normalisiertes Volumen
 
-### Procedure Overview:
+## Procedure Overview:
 
 - Sammeln von 1-Minute OHLCV-Daten der Kryptowährungen BTC/USD und ETH/USD über die Alpaca Crypto API für den Zeitraum 01.01.2021 – 15.11.2025.
-- Berechnung der Features: normalisierte Close-Preise, Log-Returns, EMAs (t = 5, 10, 15, 20, 30, 60, 120, 240 Minuten), EMA-Differenzen (z. B. EMA30 – EMA10), Slope von EMA10 und normalisiertes Handelsvolumen.
+- Berechnung der Features: normalisierte Close-Preise, Log-Returns, EMAs (t = 5, 10, 15, 20, 30, 60, 120, 240 Minuten), EMA-Differenzen (z. B. EMA30 – EMA10), Slope von EMA und normalisiertes Handelsvolumen.
 - Erstellung der Zielvariable für verschiedene Zeitfenster t ∈ {5, 15, 30, 60 Minuten}, die angibt, ob der Kurs steigt (1) oder fällt (0).
 - Training eines neuronalen Netzwerks auf Basis dieser Features zur Vorhersage der kurzfristigen Trendrichtung (binäre Klassifikation) und Evaluation mittels zeitbasierter Train-/Validation-/Test-Splits.
 - Optionales Backtesting der Modellvorhersagen in einer simplen Trading-Strategie: Long-Positionen bei positiven Trendvorhersagen eröffnen und für die jeweilige Dauer t halten.
@@ -53,10 +53,38 @@ Ruft 1-Minuten Daten von 2021-01-01 bis 2025-11-15 ab jeweils für BTC/USD und E
 
 Beispiel für ETH/USD Daten:
 
-<img src="images/Example_ETHUSD_1m_raw.png" alt="drawing" width="800"/>
+<img src="images/01_ETHUSD_1m_raw.png" alt="drawing" width="800"/>
 
 Beispiel für BTC/USD Daten:
 
-<img src="images/Example_BTCUSD_1m_raw.png" alt="drawing" width="800"/>
+<img src="images/01_BTCUSD_1m_raw.png" alt="drawing" width="800"/>
+
+---
+
+### Data Understanding
+Visualisiert die Kursentwicklung und das Handelsvolumen von BTC und ETH und untersucht erste Eigenschaften wie auch Gemeinsamkeiten der Daten.
+
+**Script**  
+
+[02_crypto_data_understanding.py](scripts/02_data_understanding/02_crypto_data_understanding.py)
+
+**Plots**  
+
+![02_BTC_Zeitreihe.png](images/02_BTC_Zeitreihe.png)
+![02_ETH_Zeitreihe.png](images/02_ETH_Zeitreihe.png)
+
+
+![02_BTC_Volumen.png](images/02_BTC_Volumen.png)
+![02_ETH_Volumen.png](images/02_ETH_Volumen.png)
+
+**Erste Erkenntnisse**
+
+- Die Close-Preise von BTC und ETH zeigen typische kurzfristige Schwankungen im Minutenbereich, wobei BTC tendenziell höhere Preisniveaus aufweist.
+- Das Handelsvolumen variiert stark über die Zeit und zeigt Spitzen zu bestimmten Handelszeiten.
+- BTC und ETH weisen teilweise ähnliche Bewegungsmuster auf, was auf eine gewisse Korrelation im Marktverhalten hinweist.
+
+---
+
+### Pre-Split Preparation
 
 
