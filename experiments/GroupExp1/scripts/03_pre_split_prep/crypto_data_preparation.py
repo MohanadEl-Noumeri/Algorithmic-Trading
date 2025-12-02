@@ -42,7 +42,7 @@ def add_ema_slope(df, window=5):
 # --- 6. Normalisierung ---
 def normalize(df):
     df["close_norm"] = (df["close"] - df["close"].mean()) / df["close"].std()
-    df["volume_norm"] = (df["volume"] - df["volume"].mean()) / df["volume"].std()
+  #  df["volume_norm"] = (df["volume"] - df["volume"].mean()) / df["volume"].std()
     return df
 
 

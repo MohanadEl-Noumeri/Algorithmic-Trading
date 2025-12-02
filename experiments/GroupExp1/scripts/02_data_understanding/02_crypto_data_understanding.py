@@ -66,15 +66,60 @@ for symbol_file in symbols:
     plt.ylabel("Frequency")
     plt.show()
 
+    '''
     # 4c: Volumen über Zeit
     plt.figure(figsize=(16, 6))
-    plt.plot(df['timestamp'], df['volume'], label='Volume', color='green', linewidth=1)
-    plt.title(f"{symbol_file} - Trading Volume over Time")
+    plt.plot(df['timestamp'], df['trade_count'], label='trade_count', color='green', linewidth=1)
+    plt.title(f"{symbol_file} - VWAP over Time")
     plt.xlabel("Timestamp")
-    plt.ylabel("Volume")
+    plt.ylabel("Trade Count")
+    plt.legend()
+    plt.show()
+    '''
+
+    # 4d: Absolute Returns (sehr stabil)
+    df["abs_return"] = df["close"].pct_change().abs()
+
+    plt.figure(figsize=(16, 6))
+    plt.plot(df["timestamp"], df["abs_return"], label="Absolute Returns", linewidth=1)
+    plt.title(f"{symbol_file} - Absolute Returns over Time")
+    plt.xlabel("Timestamp")
+    plt.ylabel("|Return|")
     plt.legend()
     plt.show()
 
+    # 4e: Candle Range (High-Low)
+    df["range"] = df["high"] - df["low"]
+
+    plt.figure(figsize=(16, 6))
+    plt.plot(df["timestamp"], df["range"], label="Candle Range (High-Low)", linewidth=1)
+    plt.title(f"{symbol_file} - Candle Range over Time")
+    plt.xlabel("Timestamp")
+    plt.ylabel("Range")
+    plt.legend()
+    plt.show()
+
+    # 4f: Normalisierte Range (Range / Close)
+    df["range_norm"] = df["range"] / df["close"]
+
+    plt.figure(figsize=(16, 6))
+    plt.plot(df["timestamp"], df["range_norm"], label="Normalized Range", linewidth=1)
+    plt.title(f"{symbol_file} - Normalized Range over Time")
+    plt.xlabel("Timestamp")
+    plt.ylabel("Range / Close")
+    plt.legend()
+    plt.show()
+
+    # 4g: Rolling Volatility (10 Bars)
+    df["vol10"] = df["log_return"].rolling(10).std()
+
+    plt.figure(figsize=(16, 6))
+    plt.plot(df["timestamp"], df["vol10"], label="Rolling Volatility (10 bars)", linewidth=1)
+    plt.title(f"{symbol_file} - Rolling 10-Bar Volatility")
+    plt.xlabel("Timestamp")
+    plt.ylabel("Volatility")
+    plt.legend()
+    plt.show()
 
     # --- 5. Erste Findings ---
     print(f"\nFindings for {symbol_file}:")
