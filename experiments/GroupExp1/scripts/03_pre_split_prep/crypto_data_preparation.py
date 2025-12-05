@@ -42,7 +42,7 @@ def add_ema_slope(df, window=5):
 # --- 6. Normalisierung ---
 def normalize(df):
     df["close_norm"] = (df["close"] - df["close"].mean()) / df["close"].std()
-  #  df["volume_norm"] = (df["volume"] - df["volume"].mean()) / df["volume"].std()
+    #  df["volume_norm"] = (df["volume"] - df["volume"].mean()) / df["volume"].std()
     return df
 
 
@@ -89,6 +89,44 @@ def compute_target_normalized(df, minutes):
     return df
 
 
+# --- 2 neue Features ---
+
+# --- NEU: Volatilität ---
+def add_volatility(df, window=30):
+    # Berechnet die Standardabweichung der Log-Returns über die letzten 'window' Minuten
+    # Das ist ein Maß für das Risiko / die Nervosität
+    df[f"volatility_{window}"] = df["log_return"].rolling(window=window).std()
+    return df
+
+
+# --- NEU: RSI (Relative Strength Index) ---
+def add_rsi(df, window=14):
+    delta = df["close"].diff()
+
+    # Gewinne und Verluste trennen
+    gain = (delta.where(delta > 0, 0))
+    loss = (-delta.where(delta < 0, 0))
+
+    # Geglätteter Durchschnitt (Wilder's Smoothing mit ewm)
+    avg_gain = gain.ewm(alpha=1 / window, min_periods=window).mean()
+    avg_loss = loss.ewm(alpha=1 / window, min_periods=window).mean()
+
+    # Relative Strength
+    rs = avg_gain / avg_loss.replace(0, 0.000001)  # Division durch 0 verhindern
+
+    # RSI Formel: 100 - (100 / (1 + RS))
+    df[f"rsi_{window}"] = 100 - (100 / (1 + rs))
+
+    # Normalisierung des RSI (damit er besser ins Netz passt)
+    # RSI ist normalerweise 0-100. Wir skalieren ihn auf 0-1 (durch 100 teilen)
+    df[f"rsi_{window}_norm"] = df[f"rsi_{window}"] / 100.0
+
+    # Lösche den rohen RSI, wir brauchen nur den normierten
+    df = df.drop(columns=[f"rsi_{window}"])
+
+    return df
+
+
 # --- 8. Data Preparation Pipeline ---
 for symbol_file in symbols:
     print(f"\n--- Data Preparation: {symbol_file} ---")
@@ -99,10 +137,12 @@ for symbol_file in symbols:
     # --- 8a: Feature Engineering ---
     df = (
         df.pipe(add_log_return)
-          .pipe(add_emas)
-          .pipe(add_ema_differences)
-          .pipe(add_ema_slope)
-          .pipe(normalize)
+        .pipe(add_emas)
+        .pipe(add_ema_differences)
+        .pipe(add_ema_slope)
+        .pipe(add_volatility, window=30)  # 1. neues Feature: Volatilität
+        .pipe(add_rsi, window=14)  # 2. neues Feature: RSI
+        .pipe(normalize)
     )
 
     # --- 8b: Targets generieren ---

@@ -32,7 +32,9 @@ for t in target_cols:
 # Plot 1: Correlation Heatmap
 plt.figure(figsize=(10, 8))
 # Wir nehmen nur Features, keine Targets für die Korrelation
-feature_cols = ["log_return", "ema_10", "ema_60", "ema_240", "ema_30_10", "ema10_slope", "volume_norm"]
+feature_cols = ["log_return", "ema_10", "ema_60", "ema_240", "ema_30_10", "ema10_slope", "volatility_30", "rsi_14_norm",
+                #"volume_norm"
+                ]
 corr = df[feature_cols].corr()
 sns.heatmap(corr, annot=True, cmap="coolwarm", fmt=".2f")
 plt.title("Feature Correlation Matrix")

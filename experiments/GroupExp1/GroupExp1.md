@@ -98,7 +98,9 @@ Berechnet alle Features und Targets aus den Rohdaten, die später in das Modell 
 - EMAs (t = 5, 10, 15, 20, 30, 60, 120, 240 Minuten)
 - EMA-Differenzen (z. B. EMA30 – EMA10)
 - Slope von EMA
-- Normalisiertes Volumen
+- Rolling Volatility (t = 30 Minuten)
+- RSI (Relative Strength Index, t = 14 Minuten)
+
 
 **Targets** berechnet:
 - Binäre Labels für t = [5, 10, 15, 30, 60, 120, 240] Minuten
@@ -108,11 +110,15 @@ Berechnet alle Features und Targets aus den Rohdaten, die später in das Modell 
 
 **Warum diese Features?**
 
-Vergleichbarkeit: Absolute Preise (z.B. 20.000$ vs 60.000$) verwirren das Modell. Wir nutzen Log-Returns (prozentuale Änderungen), damit alle Datenpunkte vergleichbar bleiben.
+- Vergleichbarkeit: Absolute Preise (z.B. 20.000$ vs 60.000$) verwirren das Modell. Wir nutzen Log-Returns (prozentuale Änderungen), damit alle Datenpunkte vergleichbar bleiben.
 
-Rauschen filtern: Minuten-Charts sind sehr chaotisch. EMAs (gleitende Durchschnitte) glätten den Kurs, um den echten Trend sichtbar zu machen.
+- Rauschen filtern: Minuten-Charts sind sehr chaotisch. EMAs (gleitende Durchschnitte) glätten den Kurs, um den echten Trend sichtbar zu machen.
 
-Normalisierung: Wir skalieren alle Werte auf eine ähnliche Größe (Z-Score), damit das neuronale Netz schneller lernt.
+- Marktpsychologie (RSI): hilft dem Modell zu erkennen, ob der Markt "überkauft" oder "überverkauft" ist – wichtige Signale für Trendwenden.
+
+- Risiko (Volatilität): "Nervösität" des Marktes messen. Das Modell lernt so, zwischen ruhigen Phasen und explosiven Ausbrüchen zu unterscheiden.
+
+- Normalisierung: Wir skalieren alle Werte auf eine ähnliche Größe (Z-Score), damit das neuronale Netz schneller lernt.
 
 **Technische Umsetzung**
 
@@ -120,15 +126,18 @@ Speed: Statt 2,5 Millionen Zeilen einzeln zu berechnen (was Stunden dauert), nut
 
 **Ergebnisse der Datenanalyse (Findings)**
 
-Balance: Es gibt fast genau gleich viele "Up"- wie "Down"-Phasen (50/50 Verteilung). Das ist ideal, weil das Modell so nicht einseitig lernt.
+Balance: 
+- Es gibt fast genau gleich viele "Up"- wie "Down"-Phasen (50/50 Verteilung). Das ist ideal, weil das Modell so nicht einseitig lernt.
 
 ![class_balance.png](images/04_class_balance.png)
 
-Korrelation: 
-- Die verschiedenen EMAs (z.B. 10er und 15er) sind sich sehr ähnlich. Das zeigt uns, dass wir später vielleicht weniger Inputs brauchen.
-- Redundanz: Ein großer roter Block (Korrelation nahe 1.00) zeigt, dass der langfristige Preistrend die kurzfristigen Schwankungen dominiert. Die EMAs enthalten fast identische Informationen.
-- Konsequenz: Dem Modell werden redundante Daten gefüttert. Für zukünftige Experimente könnte die Anzahl der EMA-Features reduziert werden.
-- Gute Features: Im Kontrast dazu zeigen ema10_slope (Steigung) und ema_30_10 (Differenz) eine interessante negative Korrelation (-0.74). Sie fangen unterschiedliche Aspekte der Marktbewegung ein und ergänzen sich daher gut.
+Korrelation & Feature-Analyse:
+
+- Redundanz (Der rote Block): Die starke Korrelation (≈ 1.00) zwischen den verschiedenen EMAs (ema_10, ema_60, ema_240) bestätigt, dass absolute Preis-Indikatoren fast identische Informationen liefern. Der langfristige Trend dominiert hier.
+
+- Volatilität: Die Zeile volatility_30 zeigt nahezu keine Korrelation (0.00) zu den anderen Features. Dies beweist, dass die Volatilität eine statistisch unabhängige Information (Marktrisiko) liefert, die in den Trend-Daten nicht enthalten ist. Das ist ideal für das neuronale Netz.
+
+- Momentum-Bestätigung (RSI): Der rsi_14_norm zeigt eine sinnvolle Korrelation zum Slope (0.67), aber keine Korrelation zum absoluten Preis-Level (EMAs ≈ 0.00). Er fungiert als Bindeglied zwischen kurzfristigem Momentum und überkauften Zuständen.
 
 ![correlation_matrix.png](images/04_correlation_matrix.png)
 
