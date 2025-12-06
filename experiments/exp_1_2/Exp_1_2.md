@@ -1,4 +1,4 @@
-# Experiment 1.2
+_# Experiment 1.2
 
 ### Problem Definition:
 **Target**
@@ -239,4 +239,4 @@ Deploy trading strategy using trained feed forward network to generate embedding
 - Use calculated trend directions as target variable
 - Train neural network (exit-network) with same feature space as above on given targets
 - Use predictions of negative trend directions as exit points (with 100 days as max. number to hold positions)
-- Explore reinforcement learning approaches.
+- Explore reinforcement learning approaches._
