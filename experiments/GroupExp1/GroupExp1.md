@@ -170,8 +170,10 @@ Gespeicherte Dateien:
 * `crypto_test_shuffled.parquet`
 
 ### Split & Shuffle Flowchart
+### Split & Shuffle Flowchart
 
-<img src="images/step04_split_shuffle_flowchart_horizontal.png" alt="Step 04 Flowchart" width="900"/>
+![Step 04 Flowchart](images/step04_final_flowchart.png)
+
 ### Step 04 – Split & Shuffle Data
 
 ### Split & Shuffle Diagram (ASCII)
