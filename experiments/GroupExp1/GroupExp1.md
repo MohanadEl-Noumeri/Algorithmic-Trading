@@ -142,3 +142,75 @@ Korrelation & Feature-Analyse:
 ![correlation_matrix.png](images/04_correlation_matrix.png)
 
 ---
+
+### Step 04 – Split & Shuffle Data
+
+Nach der Feature- und Target-Generierung werden die Daten für BTCUSD und ETHUSD getrennt einem strikt zeitbasierten Split unterzogen. Dabei dienen die ältesten 70 % der Daten als Trainingsmenge, die folgenden 15 % als Validierungsmenge und die jüngsten 15 % als Testmenge. Dieser chronologische Ansatz verhindert Data Leakage und stellt sicher, dass das Modell ausschließlich aus Vergangenheitsdaten lernt und auf späteren Marktphasen evaluiert wird.
+
+Im nächsten Schritt werden die symbolweisen Splits zu globalen Datensätzen zusammengeführt:
+
+* `Train_global = BTC_train + ETH_train`
+* `Val_global   = BTC_val   + ETH_val`
+* `Test_global  = BTC_test  + ETH_test`
+
+Anschließend erfolgt ein globales Shuffling der drei Datensätze (`sample(frac=1.0, random_state=42)`). Dadurch enthalten die Trainingsbatches später Daten aus unterschiedlichen Zeitabschnitten und aus beiden Assets, was die Generalisierung des Modells verbessert und Overfitting reduziert.
+
+### Final Output Sizes
+
+| Dataset                   | Rows      |
+| ------------------------- | --------- |
+| **Train (shuffled)**      | 3 167 097 |
+| **Validation (shuffled)** | 678 663   |
+| **Test (shuffled)**       | 678 665   |
+
+Gespeicherte Dateien:
+
+* `crypto_train_shuffled.parquet`
+* `crypto_val_shuffled.parquet`
+* `crypto_test_shuffled.parquet`
+
+### Split & Shuffle Flowchart
+
+<img src="images/step04_split_shuffle_flowchart_horizontal.png" alt="Step 04 Flowchart" width="900"/>
+### Step 04 – Split & Shuffle Data
+
+### Split & Shuffle Diagram (ASCII)
+
+```text
+Step 04 – Split & Shuffle Data (Crypto, 1m OHLCV)
+
+BTCUSD_1m_raw_prepared.parquet        ETHUSD_1m_raw_prepared.parquet
+(2 240 003 rows)                      (2 284 422 rows)
+          |                                       |
+          v                                       v
++---------------------------+       +---------------------------+
+| BTC – time-based split    |       | ETH – time-based split    |
+| Train 70%  (1 568 002)    |       | Train 70%  (1 599 095)    |
+| Val 15%    (336 000)      |       | Val 15%    (342 663)      |
+| Test 15%   (336 001)      |       | Test 15%   (342 664)      |
++---------------------------+       +---------------------------+
+          \                               /
+           \                             /
+            \                           /
+             v                         v
+          +-----------------------------------------------+
+          | Combine per split:                            |
+          | Train_global = BTC_train + ETH_train          |
+          | Val_global   = BTC_val   + ETH_val            |
+          | Test_global  = BTC_test  + ETH_test           |
+          +-----------------------------------------------+
+                              |
+                              v
+                   +---------------------------+
+                   | Global shuffle            |
+                   | sample(frac=1.0,          |
+                   |         random_state=42)  |
+                   +---------------------------+
+                              |
+                              v
+          +---------------------------------------------------------+
+          | Final shards:                                           |
+          | crypto_train_shuffled.parquet   (3 167 097 rows)        |
+          | crypto_val_shuffled.parquet       (678 663 rows)        |
+          | crypto_test_shuffled.parquet      (678 665 rows)        |
+          +---------------------------------------------------------+
