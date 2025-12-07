@@ -5,25 +5,26 @@ DATA_ACQUISITON:
   DATA_PATH: "../../data"
   START_DATE: "2021-01-01"
   END_DATE: "2025-11-15"
-DATA_PREP:
-  PROCESSED_PATH:
-  PREDICTION_PERIODS:
-  EMA_PERIODS:
-  SLOPE_PERIODS:
-  Z_NORM_WINDOW:
-  TRAIN_DATE:
-  VALIDATION_DATE:
-  TEST_DATE:
-  FEATURE_PATH:
-MODELING:
-  TARGET:
-  MODEL_PATH:
-  BATCH_SIZE:
-  HIDDEN1:
-  HIDDEN2:
-  DROPOUT:
-  WEIGHT_DECAY:
-  EPOCHS:
-  PATIENCE:
-  LR:
 
+DATA_PREP:
+  PROCESSED_PATH: "../../data"   # Ort der vorbereiteten Parquet-Dateien
+  PREDICTION_PERIODS: [5, 10, 15, 30, 60, 120, 240]
+  EMA_PERIODS: [5, 10, 15, 20, 30, 60, 120, 240]
+  SLOPE_PERIODS: [5, 10, 15, 20, 30, 60, 120, 240]
+  Z_NORM_WINDOW: 30
+  TRAIN_DATE: "2021-01-01"
+  VALIDATION_DATE: "2025-01-01"
+  TEST_DATE: "2025-07-01"
+  FEATURE_PATH: "../03_pre_split_prep/features.txt"
+
+MODELING:
+  TARGET: "target_60m"
+  MODEL_PATH: "../../models/exp1"
+  BATCH_SIZE: 2048      # Größer = schneller
+  HIDDEN1: 128          # Erste Hidden Layer
+  HIDDEN2: 64          # Zweite Hidden Layer
+  DROPOUT: 0.3
+  LR: 0.001             # 1e-3
+  WEIGHT_DECAY: 0.0001  # 1e-4
+  EPOCHS: 50
+  PATIENCE: 7

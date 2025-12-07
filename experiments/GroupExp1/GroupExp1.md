@@ -145,6 +145,8 @@ Korrelation & Feature-Analyse:
 
 ### Step 04 – Split & Shuffle Data
 
+[04_crypto_split_data.py](scripts/04_split_data/04_crypto_split_data.py)
+
 Nach der Feature- und Target-Generierung werden die Daten für BTCUSD und ETHUSD getrennt einem strikt zeitbasierten Split unterzogen. Dabei dienen die ältesten 70 % der Daten als Trainingsmenge, die folgenden 15 % als Validierungsmenge und die jüngsten 15 % als Testmenge. Dieser chronologische Ansatz verhindert Data Leakage und stellt sicher, dass das Modell ausschließlich aus Vergangenheitsdaten lernt und auf späteren Marktphasen evaluiert wird.
 
 Im nächsten Schritt werden die symbolweisen Splits zu globalen Datensätzen zusammengeführt:
@@ -170,11 +172,8 @@ Gespeicherte Dateien:
 * `crypto_test_shuffled.parquet`
 
 ### Split & Shuffle Flowchart
-### Split & Shuffle Flowchart
 
 ![Step 04 Flowchart](images/step04_final_flowchart.png)
-
-### Step 04 – Split & Shuffle Data
 
 ### Split & Shuffle Diagram (ASCII)
 
@@ -216,3 +215,37 @@ BTCUSD_1m_raw_prepared.parquet        ETHUSD_1m_raw_prepared.parquet
           | crypto_val_shuffled.parquet       (678 663 rows)        |
           | crypto_test_shuffled.parquet      (678 665 rows)        |
           +---------------------------------------------------------+
+```
+### Split ohne shuffle
+
+[04_crypto_split_data2.py](scripts/04_split_data/04_crypto_split_data2.py)
+
+Für unser Time-Series-Problem wird die Datenaufteilung zeitbasiert durchgeführt. Ein zufälliger Split ist nicht erlaubt, da er zukünftige Informationen in die Vergangenheit bringen würde.
+
+**Grundidee:**
+- BTC ist unser Target (Trendvorhersage).
+- ETH wird als Feature genutzt, um Marktinformationen hinzuzufügen.
+- BTC bestimmt die Zeitachse, ETH wird synchronisiert und als Feature hinzugefügt.
+
+**Warum dieser Split sicher ist:**
+- Chronologische Trennung verhindert Data Leakage.
+- Die ETH-Daten werden korrekt zur BTC-Serie gematcht, ohne Zeilen zu verlieren.
+- Modelle sehen nur Informationen aus der Vergangenheit für Vorhersagen in die Zukunft.
+
+**Split-Verhältnisse:**
+70% Train
+15% Validation
+15% Test
+
+### Model Training
+
+[07_feed_forward.py](scripts/07_model_training/07_feed_forward.py)
+
+- Lädt die Experimentkonfiguration und die Featureliste (features.txt).
+- Lädt Trainings-, Validierungs- und Testdaten aus Parquet-Dateien und normalisiert die Features mit StandardScaler.
+- Erstellt ein MLP mit 2 versteckten Schichten (128 und 64 Neuronen), ReLU-Aktivierungen, Dropout 0.3 und einem Output für binäre Klassifikation.
+- Trainiert mit BCEWithLogitsLoss, AdamW-Optimizer (LR 0.001, Weight Decay 0.0001), Batch-Größe 2048 und Early Stopping nach 7 Epochen ohne Verbesserung.
+- Speichert das beste Modell (best_model.pt) und den Feature-Scaler (feature_scaler.pkl)
+
+![img.png](img.png)
+

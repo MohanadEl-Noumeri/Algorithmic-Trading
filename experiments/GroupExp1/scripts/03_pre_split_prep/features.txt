@@ -1,0 +1,15 @@
+close_norm
+log_return
+ema_5
+ema_10
+ema_15
+ema_20
+ema_30
+ema_60
+ema_120
+ema_240
+ema_10_5
+ema_30_10
+ema10_slope
+volatility_30
+rsi_14_norm
