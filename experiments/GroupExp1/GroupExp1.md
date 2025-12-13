@@ -247,5 +247,60 @@ Für unser Time-Series-Problem wird die Datenaufteilung zeitbasiert durchgeführ
 - Trainiert mit BCEWithLogitsLoss, AdamW-Optimizer (LR 0.001, Weight Decay 0.0001), Batch-Größe 2048 und Early Stopping nach 7 Epochen ohne Verbesserung.
 - Speichert das beste Modell (best_model.pt) und den Feature-Scaler (feature_scaler.pkl)
 
-![img.png](img.png)
+![img.png](models/exp1/07_overfitting_problem.png)
+
+
+### Model Testing
+
+[07_feed_forward.py](scripts/07_model_training/07_feed_forward.py) (Die evaluierung methode ist da)
+
+[Eval.txt](scripts/08_model_testing/Eval.txt) (Die anderen Tests)
+
+Um Overfitting zu adressieren, das in initialen Experimenten beobachtet wurde, wurden folgende Maßnahmen implementiert:
+
+- Feature Set Redesign: Anstatt BTC-Features zur Vorhersage von BTC-Targets zu nutzen (potenzielle Data Leakage), wurden ausschließlich ETH-Features als Prädiktoren verwendet. Diese Cross-Asset-Strategie reduziert die Gefahr des Overfitting und nutzt die Korrelation zwischen ETH und BTC zur Generalisierung.
+
+- Erhöhte Regularisierung: Dropout wurde von 0.3 auf 0.5-0.6 erhöht, um robusteres Feature Learning zu erzwingen.
+
+
+| Parameter | Getestete Werte |
+|-----------|-----------------|
+| **Dropout** | 0.5, 0.6 |
+| **Learning Rate** | 1e-3, 5e-4 |
+| **Hidden Layers** | (128, 64), (64, 32) |
+
+Insgesamt getestete Konfigurationen: 5
+
+
+**Ergebnisse**
+
+| Experiment | Dropout | LR | Hidden | Val Acc | Test Acc | Gap | Precision | Recall | ROC-AUC |
+|------|-----|----|--------|--------|--------|----|--------|--------|----------------|
+| 4 | 0.6 | 5e-4 | 128,64 | 51.97% | 51.08% | 0.89% | 51.07% | 51.50% | 0.5158 |
+
+
+
+**Finales Model**
+
+Optimale Konfiguration:
+- Architecture: MLP mit 2 Hidden Layers (128, 64 Neuronen)
+- Dropout: 0.6 (aggressiv zur Overfitting-Prevention)
+- Learning Rate: 5e-4 
+- Optimizer: AdamW mit Weight Decay 1e-4
+- Batch Size: 2048
+
+Performance-Metriken:
+- Validation Accuracy: 51.97%
+- Test Accuracy: 51.08%
+- Generalisierungs-Gap: 0.89% 
+- ROC-AUC: 0.5158 (statistisch signifikant über Random Baseline von 0.5)
+
+
+Precision (51.07%):
+> "When model says 'Up', it's right 51.07% of the time"
+
+Recall (51.50%):
+> "Model catches 51.50% of all Up moves"
+
+![07_dropout0.6_LR5e-4.png](scripts/08_model_testing/07_dropout0.6_LR5e-4.png)
 

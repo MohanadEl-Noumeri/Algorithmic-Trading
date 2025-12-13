@@ -18,13 +18,13 @@ DATA_PREP:
   FEATURE_PATH: "../03_pre_split_prep/features.txt"
 
 MODELING:
-  TARGET: "target_60m"
+  TARGET: "target_15m"
   MODEL_PATH: "../../models/exp1"
-  BATCH_SIZE: 2048      # Größer = schneller
-  HIDDEN1: 128          # Erste Hidden Layer
-  HIDDEN2: 64          # Zweite Hidden Layer
-  DROPOUT: 0.3
-  LR: 0.001             # 1e-3
+  BATCH_SIZE: 2048
+  HIDDEN1: 128
+  HIDDEN2: 64
+  DROPOUT: 0.5
+  LR: 0.0005             # 1e-3
   WEIGHT_DECAY: 0.0001  # 1e-4
   EPOCHS: 50
-  PATIENCE: 7
+  PATIENCE: 10

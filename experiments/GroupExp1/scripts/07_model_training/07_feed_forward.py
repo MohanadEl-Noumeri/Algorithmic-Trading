@@ -1,8 +1,3 @@
-"""
-MLP training for crypto trend prediction.
-Fast and simple - no sequences needed!
-"""
-
 import os
 import pandas as pd
 import yaml
@@ -32,11 +27,11 @@ FEATURE_PATH = params["DATA_PREP"]["FEATURE_PATH"]
 BATCH_SIZE = params["MODELING"].get("BATCH_SIZE", 2048)
 HIDDEN1 = params["MODELING"].get("HIDDEN1", 128)
 HIDDEN2 = params["MODELING"].get("HIDDEN2", 64)
-DROPOUT = params["MODELING"].get("DROPOUT", 0.3)
-LR = params["MODELING"].get("LR", 1e-3)
+DROPOUT = params["MODELING"].get("DROPOUT", 0.5)
+LR = params["MODELING"].get("LR", 5e-4)
 WEIGHT_DECAY = params["MODELING"].get("WEIGHT_DECAY", 1e-4)
 EPOCHS = params["MODELING"].get("EPOCHS", 50)
-PATIENCE = params["MODELING"].get("PATIENCE", 7)
+PATIENCE = params["MODELING"].get("PATIENCE", 10)
 
 os.makedirs(MODEL_PATH, exist_ok=True)
 
