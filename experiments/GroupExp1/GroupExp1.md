@@ -314,3 +314,5 @@ Recall (51.50%):
 ![Trade Entries & Exits](images/tradeEntries.png)
 
 ![Distribution of Model Probabilities](images/distributionModelProbabilities.png)
+
+![Portfolio 14.12.2025](images/portfolio_14122025.png)
