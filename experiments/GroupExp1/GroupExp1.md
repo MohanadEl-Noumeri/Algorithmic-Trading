@@ -304,3 +304,13 @@ Recall (51.50%):
 
 ![07_dropout0.6_LR5e-4.png](scripts/08_model_testing/07_dropout0.6_LR5e-4.png)
 
+### Deployment
+[09_backtesting.py](scripts/09_deployment/09_backtesting.py)
+
+[09_paper_trading.py](scripts/09_deployment/09_paper_trading.py)
+
+![Equity Curve: ML Model vs Buy & Hold](images/09_equitycurve_.png)
+
+![Trade Entries & Exits](images/tradeEntries.png)
+
+![Distribution of Model Probabilities](images/distributionModelProbabilities.png)
