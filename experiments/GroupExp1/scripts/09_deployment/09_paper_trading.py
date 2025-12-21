@@ -56,7 +56,7 @@ LOOKBACK_MIN = 350  # Extra buffer for indicators
 TRADE_AMOUNT = 1000  # USD per trade
 
 # --- THRESHOLDS (Conservative) ---
-CONFIDENCE_THRESHOLD = 0.52  # Only trade when model > 60% confident
+CONFIDENCE_THRESHOLD = 0.515  # zwischen 51-52 realistisch
 EXIT_THRESHOLD = 0.45  # Exit if confidence drops below 45%
 
 # --- RISK MANAGEMENT (ATR-Based) ---
