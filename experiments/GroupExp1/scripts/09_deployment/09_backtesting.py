@@ -113,8 +113,8 @@ print(f"Prediction range: [{probs.min():.4f}, {probs.max():.4f}]")
 print("\n--- Trading Strategy Setup ---")
 
 # Configuration
-CONFIDENCE_THRESHOLD = 0.60  # Only trade when model is confident
-EXIT_THRESHOLD = 0.45  # Exit early if confidence drops
+CONFIDENCE_THRESHOLD = 0.515  # Only trade when model is confident
+EXIT_THRESHOLD = 0.49  # Exit early if confidence drops
 BROKER_FEE = 0.001  # 0.1% per trade
 SPREAD_BPS = 5  # 5 basis points
 SLIPPAGE_BPS = 3  # 3 basis points
