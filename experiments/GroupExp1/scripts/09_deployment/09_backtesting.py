@@ -114,7 +114,7 @@ print("\n--- Trading Strategy Setup ---")
 
 # Configuration
 CONFIDENCE_THRESHOLD = 0.515  # Only trade when model is confident
-EXIT_THRESHOLD = 0.49  # Exit early if confidence drops
+EXIT_THRESHOLD = 0.495  # Exit early if confidence drops
 BROKER_FEE = 0.001  # 0.1% per trade
 SPREAD_BPS = 5  # 5 basis points
 SLIPPAGE_BPS = 3  # 3 basis points

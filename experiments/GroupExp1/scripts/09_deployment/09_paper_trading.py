@@ -57,7 +57,7 @@ TRADE_AMOUNT = 1000  # USD per trade
 
 # --- THRESHOLDS (Conservative) ---
 CONFIDENCE_THRESHOLD = 0.515  # zwischen 51-52 realistisch
-EXIT_THRESHOLD = 0.49
+EXIT_THRESHOLD = 0.495
 
 # --- RISK MANAGEMENT (ATR-Based) ---
 ATR_WINDOW = 14
