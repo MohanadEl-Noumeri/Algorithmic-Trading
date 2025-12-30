@@ -173,7 +173,7 @@ Gespeicherte Dateien:
 
 ### Split & Shuffle Flowchart
 
-![Step 04 Flowchart](images/step04_final_flowchart.png)
+![Step 04 Flowchart](images/04_final_flowchart.png)
 
 ### Split & Shuffle Diagram (ASCII)
 
