@@ -319,10 +319,7 @@ if live_trades_file.exists():
         print(f"    ❌ WARNING: Significant discrepancy!")
         print(f"       Return diff: {return_diff:.2f}%")
         print(f"       Trade diff: {trades_diff}")
-        print(f"\n       Investigate:")
-        print(f"       - Look-ahead bias in features?")
-        print(f"       - Execution delays?")
-        print(f"       - Different market conditions?")
+
 else:
     print(f"  ⚠️  No live trades file found")
     print(f"     Run live_performance_analyzer.py first")
