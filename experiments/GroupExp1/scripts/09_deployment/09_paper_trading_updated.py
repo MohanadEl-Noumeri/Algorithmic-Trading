@@ -1,13 +1,6 @@
 """
 REALISTIC IMPROVED BOT v2.0
 Focus: RISK MANAGEMENT for 51-52% accuracy model
-
-Key Changes:
-1. Keep realistic thresholds (0.515/0.49)
-2. STRICT position sizing
-3. FIXED stop losses (not ATR-based)
-4. Max daily loss limit
-5. Trade only during high-volume hours
 """
 
 import time
@@ -63,11 +56,11 @@ TRADE_AMOUNT = 1000  # USD per trade
 
 
 CONFIDENCE_THRESHOLD = 0.516
-EXIT_THRESHOLD = 0.467
+# EXIT_THRESHOLD = 0.467
 
 # --- CRITICAL: RISK MANAGEMENT ---
-STOP_LOSS_PCT = 0.005  # FIXED 0.5% stop loss
-TAKE_PROFIT_PCT = 0.015  # FIXED 1.5% take profit (3:1 RR)
+STOP_LOSS_PCT = 0.005  #  stop loss
+TAKE_PROFIT_PCT = 0.015  #  take profit
 
 
 
@@ -420,19 +413,19 @@ def execute_trade_cycle():
         except Exception as e:
             logger.error(f"❌ Order failed: {e}")
 
-    # --- MANUAL EXIT ---
-    elif has_position and prob < EXIT_THRESHOLD:
-        logger.info(f"\n SELL SIGNAL (Confidence dropped to {prob:.1%})")
-        logger.info(f"   Current PnL: ${position_pnl:.2f}")
-
-        try:
-            trading_client.close_position(TRADING_PAIR.replace("/", ""))
-            logger.info(f"✅ POSITION CLOSED")
-
-            log_trade('SELL', current_price, prob, position_qty, position_pnl)
-
-        except Exception as e:
-            logger.error(f"❌ Close failed: {e}")
+#    # --- MANUAL EXIT ---
+#    elif has_position and prob < EXIT_THRESHOLD:
+#        logger.info(f"\n SELL SIGNAL (Confidence dropped to {prob:.1%})")
+#        logger.info(f"   Current PnL: ${position_pnl:.2f}")
+#
+#        try:
+#            trading_client.close_position(TRADING_PAIR.replace("/", ""))
+#            logger.info(f"✅ POSITION CLOSED")
+#
+#            log_trade('SELL', current_price, prob, position_qty, position_pnl)
+#
+#        except Exception as e:
+#            logger.error(f"❌ Close failed: {e}")
 
     # --- HOLD ---
     elif has_position:
