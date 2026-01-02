@@ -416,6 +416,52 @@ def execute_trade_cycle():
         except Exception as e:
             logger.error(f"❌ Order failed: {e}")
 
+        # --- HOLD or EXIT ---
+    elif has_position:
+        # Calculate TP/SL prices based on entry
+        tp_price = entry_price * (1 + TAKE_PROFIT_PCT)
+        sl_price = entry_price * (1 - STOP_LOSS_PCT)
+
+        # FAILSAFE: Manual exit if TP or SL reached
+        # (Needed because Alpaca Crypto API may not support bracket orders properly)
+        if current_price >= tp_price:
+            logger.info(f"\n TAKE PROFIT REACHED!")
+            logger.info(f"   Entry: ${entry_price:.2f}")
+            logger.info(f"   Target TP: ${tp_price:.2f}")
+            logger.info(f"   Current: ${current_price:.2f}")
+            logger.info(f"   PnL: ${position_pnl:.2f} (+{TAKE_PROFIT_PCT * 100:.1f}%)")
+
+            try:
+                trading_client.close_position(TRADING_PAIR.replace("/", ""))
+                logger.info(f"✅ POSITION CLOSED (Take Profit)")
+                log_trade('SELL', current_price, prob, position_qty, position_pnl)
+            except Exception as e:
+                logger.error(f"❌ Close failed: {e}")
+
+        elif current_price <= sl_price:
+            logger.info(f"\n STOP LOSS REACHED!")
+            logger.info(f"   Entry: ${entry_price:.2f}")
+            logger.info(f"   Target SL: ${sl_price:.2f}")
+            logger.info(f"   Current: ${current_price:.2f}")
+            logger.info(f"   PnL: ${position_pnl:.2f} (-{STOP_LOSS_PCT * 100:.1f}%)")
+
+            try:
+                trading_client.close_position(TRADING_PAIR.replace("/", ""))
+                logger.info(f"✅ POSITION CLOSED (Stop Loss)")
+                log_trade('SELL', current_price, prob, position_qty, position_pnl)
+            except Exception as e:
+                logger.error(f"❌ Close failed: {e}")
+        else:
+            # Still holding - show distance to TP/SL
+            to_tp = ((tp_price / current_price) - 1) * 100
+            to_sl = ((current_price / sl_price) - 1) * 100
+
+            logger.info(f"⏸️  HOLDING (Prob: {prob:.1%}, PnL: ${position_pnl:.2f})")
+            logger.info(f"           Need +{to_tp:.2f}% for TP @ ${tp_price:.2f}")
+            logger.info(f"           Safe +{to_sl:.2f}% above SL @ ${sl_price:.2f}")
+    else:
+        logger.info(f"⏳ WAITING (Prob: {prob:.1%} < {CONFIDENCE_THRESHOLD:.1%})")
+
 #    # --- MANUAL EXIT ---
 #    elif has_position and prob < EXIT_THRESHOLD:
 #        logger.info(f"\n SELL SIGNAL (Confidence dropped to {prob:.1%})")
@@ -430,11 +476,6 @@ def execute_trade_cycle():
 #        except Exception as e:
 #            logger.error(f"❌ Close failed: {e}")
 
-    # --- HOLD ---
-    elif has_position:
-        logger.info(f"⏸️  HOLDING (Prob: {prob:.1%}, PnL: ${position_pnl:.2f})")
-    else:
-        logger.info(f"⏳ WAITING (Prob: {prob:.1%} < {CONFIDENCE_THRESHOLD:.1%})")
 
 
 # --- MAIN LOOP ---
