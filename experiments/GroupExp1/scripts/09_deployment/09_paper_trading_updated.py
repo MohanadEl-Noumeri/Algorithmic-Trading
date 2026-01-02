@@ -401,7 +401,10 @@ def execute_trade_cycle():
                 notional=TRADE_AMOUNT,
                 side=OrderSide.BUY,
                 time_in_force=TimeInForce.GTC,
-                take_profit={'limit_price': take_profit_price},
+                take_profit={
+                    'limit_price': take_profit_price,
+                    'stop_price': take_profit_price  # Trigger sofort bei TP
+                },
                 stop_loss={'stop_price': stop_loss_price}
             )
 
