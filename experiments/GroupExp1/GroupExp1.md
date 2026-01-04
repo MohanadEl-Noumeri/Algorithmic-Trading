@@ -175,47 +175,7 @@ Gespeicherte Dateien:
 
 ![Step 04 Flowchart](images/04_final_flowchart.png)
 
-### Split & Shuffle Diagram (ASCII)
 
-```text
-Step 04 – Split & Shuffle Data (Crypto, 1m OHLCV)
-
-BTCUSD_1m_raw_prepared.parquet        ETHUSD_1m_raw_prepared.parquet
-(2 240 003 rows)                      (2 284 422 rows)
-          |                                       |
-          v                                       v
-+---------------------------+       +---------------------------+
-| BTC – time-based split    |       | ETH – time-based split    |
-| Train 70%  (1 568 002)    |       | Train 70%  (1 599 095)    |
-| Val 15%    (336 000)      |       | Val 15%    (342 663)      |
-| Test 15%   (336 001)      |       | Test 15%   (342 664)      |
-+---------------------------+       +---------------------------+
-          \                               /
-           \                             /
-            \                           /
-             v                         v
-          +-----------------------------------------------+
-          | Combine per split:                            |
-          | Train_global = BTC_train + ETH_train          |
-          | Val_global   = BTC_val   + ETH_val            |
-          | Test_global  = BTC_test  + ETH_test           |
-          +-----------------------------------------------+
-                              |
-                              v
-                   +---------------------------+
-                   | Global shuffle            |
-                   | sample(frac=1.0,          |
-                   |         random_state=42)  |
-                   +---------------------------+
-                              |
-                              v
-          +---------------------------------------------------------+
-          | Final shards:                                           |
-          | crypto_train_shuffled.parquet   (3 167 097 rows)        |
-          | crypto_val_shuffled.parquet       (678 663 rows)        |
-          | crypto_test_shuffled.parquet      (678 665 rows)        |
-          +---------------------------------------------------------+
-```
 ### Split ohne shuffle
 
 [04_crypto_split_data2.py](scripts/04_split_data/04_crypto_split_data2.py)
@@ -311,8 +271,248 @@ Recall (51.50%):
 
 ![Equity Curve: ML Model vs Buy & Hold](images/09_equitycurve_.png)
 
-![Trade Entries & Exits](images/tradeEntries.png)
+## Trading Bot Development 
 
-![Distribution of Model Probabilities](images/distributionModelProbabilities.png)
+[09_paper_trading_updated.py](scripts/09_deployment/09_paper_trading_updated.py)
 
-![Portfolio 14.12.2025](images/portfolio_14122025.png)
+[09_Backtesting_val.py](scripts/09_deployment/09_Backtesting_val.py)
+
+[Live_performance_analyzer.py](scripts/09_deployment/Live_performance_analyzer.py)
+
+Unser Trading Bot durchlief mehrere Iterationen, um von einem unprofitablen System zu einem stabilen, risikogesteuerten System zu werden. Die Haupterkenntnis: Risk Management ist wichtig.
+
+**Wichtigste Ergebnisse:**
+-  Model Accuracy: 51%-52%
+-  Mit richtigem Risk Management: Profitabel trotz niedriger Accuracy
+-  Finale R/R Ratio: 2.5:1
+-  Expected Return: ~1.5% pro Tag
+
+---
+
+**Phase 1: Initiale Version (v1.0) - Das Problem**
+
+### Setup
+```
+Model: MLP Neural Network (3 Layer)
+Accuracy: ca. 51%
+Entry: Probability > 0.515
+Exit: Probability < 0.49 (manuelle Exits)
+Stop Loss: ATR-basiert 
+Take Profit: ATR-basiert 
+```
+
+### Performance nach 24 Stunden
+```
+Trades: 38
+Win Rate: 47.4%
+Average Win: +0.152%  
+Average Loss: -0.344%
+R/R Ratio: 0.44:1 
+Total PnL: -$40.63
+ROI: -0.26%
+```
+
+### Das Problem: Variable Risk Management
+
+**Trade Beispiele aus trade_journal_v2.csv:**
+
+| Trade | Entry Price | Exit Price | Outcome | Grund |
+|-------|------------|------------|---------|-------|
+| 7 | $88,003.70 | $88,742.02 | +0.839% | Manueller Exit bei Prob < 0.49 |
+| 8 | $88,349.28 | $88,382.13 | +0.037% | Manueller Exit bei Prob < 0.49 |
+| 9 | $88,499.57 | $88,347.30 | -0.172% | Manueller Exit bei Prob < 0.49 |
+
+**Kernproblem:** Bot verkaufte basierend auf Probability-Drops, nicht auf klaren Preis-Zielen!
+- Winning Trades wurden zu früh beendet
+- Losing Trades liefen zu lange
+- Keine konsistente Risk/Reward Ratio
+
+---
+
+### Phase 2: Threshold Calibration - Erste Verbesserungsversuche
+
+**Analyse der Probability Distribution**
+
+Wir analysierten 1000+ Predictions um optimale Thresholds zu finden:
+
+```
+Probability Range: 0.4405 - 0.5290
+Mean: 0.4865
+10th Percentile: 0.4670
+90th Percentile: 0.5170
+```
+
+**Erster Versuch: Breitere Thresholds**
+```
+Entry Threshold: 0.517 (90th percentile)
+Exit Threshold: 0.467 (10th percentile)
+Gap: 0.05 (breiter als vorher: 0.025)
+```
+
+**Hypothese:** Breiterer Gap = Trades laufen länger = Höhere Gewinne
+
+**Ergebnis:** Problem blieb bestehen
+- Manuelle Exits triggerten immer noch zu früh
+- R/R Ratio blieb bei um 0.44:1
+
+**Erkenntnis:** Das Problem war nicht der Threshold-Gap, sondern die Exit-Logik selbst
+
+---
+
+![09_backtest_vs_live_old.png](images/09_backtest_vs_live_old.png)
+![trade_entries.png](scripts/09_deployment/trade_entries.png)
+
+### Phase 3: Risk Management (v2.0)
+
+**Die Lösung: Fixed Stop Loss & Take Profit**
+
+**Neue Strategie:**
+```python
+STOP_LOSS_PCT = 0.005   # FIXED -0.5%
+TAKE_PROFIT_PCT = 0.015  # FIXED +1.5%
+```
+
+**Entry Logic:**
+```python
+if probability > 0.516 and not has_position:
+    BUY with bracket orders:
+    - Take Profit @ Entry × 1.015
+    - Stop Loss @ Entry × 0.995
+```
+
+**Exit Logic:**
+```python
+# KEINE manuelle Exit Logic mehr!
+# Nur Bracket Orders handeln Exits
+```
+
+**Die Mathematik dahinter**
+
+Mit 51% Win Rate und 3:1 R/R:
+```
+Expected Value per Trade:
+= (Win Rate × Win Size) - (Loss Rate × Loss Size)
+= (0.51 × 1.5%) - (0.49 × 0.5%)
+= 0.765% - 0.245%
+= +0.52% per Trade 
+
+Breakeven Win Rate:
+= Loss Size / (Win Size + Loss Size)
+= 0.5% / (1.5% + 0.5%)
+= 25%
+
+Profitabel selbst bei nur 25% Win Rate
+```
+
+Das bedeutet: Selbst wenn unser Modell nur 30% Accuracy hätte, wäre der Bot noch profitabel!
+
+---
+
+### Phase 4: The Bracket Orders Problem
+
+**Test von v2.0 (01.01.2026, 00:30)**
+
+**Trade:**
+```
+Entry: $87,814.15 (01.01 15:04)
+Erwartet TP: $89,131.36 (+1.5%)
+Erwartet SL: $87,375.09 (-0.5%)
+```
+
+**Was passierte:**
+- Trade lief 30+ Stunden
+- Preis erreichte $89,438 über dem TP
+- Position blieb offen 
+
+### Das Problem: Alpaca Crypto API
+
+Grund 1: Bracket Orders wurden nicht erstellt
+
+Erkenntnis: Alpaca's Crypto API unterstützt keine Bracket Orders wie die Stock API
+
+Grund 2: Limit Order wurde übersprungen
+
+```
+TP @ $89,131 (Limit Order)
+Preis sprang von $88,900 → $89,500
+→ Limit Order nicht triggered!
+```
+
+---
+
+### Phase 5: Failsafe Implementation (v2.1)
+
+**Die Lösung: Bot-basierte Exit Logic**
+
+Da Alpaca's Bracket Orders nicht funktionierten, implementierten wir eine Failsafe Logic:
+
+```python
+elif has_position:
+    tp_price = entry_price × 1.015
+    sl_price = entry_price × 0.995
+    
+    if current_price >= tp_price:
+        # VERKAUFE bei Take Profit
+        trading_client.close_position()
+        log_trade('SELL', TP reached)
+        
+    elif current_price <= sl_price:
+        # VERKAUFE bei Stop Loss
+        trading_client.close_position()
+        log_trade('SELL', SL reached)
+    
+    else:
+        # HALTE Position
+        logger.info("HOLDING")
+```
+
+**Vorteil:** Bot checkt jede Minute ob TP oder SL erreicht wurde und handelt entsprechend.
+
+**Nachteil:** 60-Sekunden-Interval kann Slippage verursachen.
+
+---
+
+## Phase 6: Live Test mit Failsafe (02.01.2026, 18:50)
+
+### Trade #3 Analyse
+
+**Setup:**
+```
+CONFIDENCE_THRESHOLD = 0.512
+Entry: $90,284.20 (02.01 18:49)
+TP Target: $91,638.46 (+1.5%)
+SL Target: $89,832.78 (-0.5%)
+```
+
+**Minute-by-Minute Log:**
+```
+19:52:50 - Price: $89,873.63 (über SL)
+         - Status: HOLDING
+         
+19:53:50 - Price: $89,505.48 (unter SL)
+         - Failsafe triggered!
+         - Position closed
+```
+
+**Ergebnis:**
+```
+Exit Price: $89,505.48
+Actual Loss: -0.86%
+Expected Loss: -0.5%
+Slippage: 0.36%
+```
+
+### Warum Slippage?
+
+**BTC fiel $368 in 60 Sekunden!**
+```
+19:52:50: $89,873
+19:53:50: $89,505
+→ -0.41% in 60 Sekunden (Flash Crash)
+```
+
+Problem: Bot checked nur alle 60 Sekunden → Verpasste den optimalen SL-Trigger bei $89,832
+
+Aber: Die Failsafe Logic funktionierte! Bot erkannte SL-Verletzung und verkaufte automatisch.
+
+![portfolie_2wochen.png](images/portfolie_2wochen.png)
