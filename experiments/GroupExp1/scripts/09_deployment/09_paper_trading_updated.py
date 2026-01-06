@@ -59,8 +59,8 @@ CONFIDENCE_THRESHOLD = 0.512
 # EXIT_THRESHOLD = 0.467
 
 # --- RISK MANAGEMENT ---
-STOP_LOSS_PCT = 0.004  #  stop loss
-TAKE_PROFIT_PCT = 0.01  #  take profit
+STOP_LOSS_PCT = 0.005  #  stop loss
+TAKE_PROFIT_PCT = 0.012  #  take profit
 
 
 
