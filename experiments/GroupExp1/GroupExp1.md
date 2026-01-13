@@ -285,7 +285,6 @@ Unser Trading Bot durchlief mehrere Iterationen, um von einem unprofitablen Syst
 -  Model Accuracy: 51%-52%
 -  Mit richtigem Risk Management: Profitabel trotz niedriger Accuracy
 -  Finale R/R Ratio: 2.5:1
--  Expected Return: ~1.5% pro Tag
 
 ---
 
@@ -360,7 +359,7 @@ Gap: 0.05 (breiter als vorher: 0.025)
 ---
 
 ![09_backtest_vs_live_old.png](images/09_backtest_vs_live_old.png)
-![trade_entries.png](scripts/09_deployment/trade_entries.png)
+![trade_entries.png](images/trade_entries.png)
 
 ### Phase 3: Risk Management (v2.0)
 
