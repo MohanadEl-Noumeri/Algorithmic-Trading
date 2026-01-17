@@ -50,7 +50,7 @@ Extrahiert Rohdaten für BTC/USD und ETH/USD von der Alpaca Crypto API.
 
 [scripts/01_data_acquisition/crypto_data_acquisition.py](scripts/01_data_acquisition/crypto_data_acquisition.py)
 
-Ruft 1-Minuten Daten von 2021-01-01 bis 2025-11-15 ab jeweils für BTC/USD und ETH/USD und speichert sie als .csv sowie .parquet Dateien in:
+Ruft 1-Minuten Daten von 2021-01-01 bis 2025-11-15 ab jeweils für BTC/USD und ETH/USD und speichert sie als .csv sowie parquet Dateien in:
 [data](data)
 
 
@@ -731,7 +731,7 @@ Slippage: 0.36%
 → -0.41% in 60 Sekunden (Flash Crash)
 ```
 
-Problem: Bot checked nur alle 60 Sekunden → Verpasste den optimalen SL-Trigger bei $89,832
+Problem: Bot checkt nur alle 60 Sekunden → Verpasste den optimalen SL-Trigger bei $89,832
 
 Aber: Die Failsafe Logic funktionierte! Bot erkannte SL-Verletzung und verkaufte automatisch.
 
