@@ -1,41 +1,44 @@
-# Experiment 1
-
 ### Problem Definition:
 **Target**
 
-Vorhersage, ob der Preis von BTC/USD in den nächsten t = [5, 10, 15, 30, 60, 120, 240] Minuten steigt oder fällt in einem Zeitraum vom 01.01.2021 bis 15.11.2025
+Vorhersage, ob der Preis von BTC/USD in den nächsten t = 15 Minuten steigt oder fällt, basierend auf ETH/USD Features (Cross-Asset Strategie). in einem Zeitraum vom 01.01.2021 bis jetzt
 Dazu wird der Trend berechnet durch:
-- lineare Regression des zukünftigen Preisfensters
-- Normalisierung des Slopes durch den Durchschnittspreis
-- binäre Label:
-1 = Trend nach oben,
-0 = Trend nach unten
+- Lineare Regression des zukünftigen Preisfensters
+- Normalisierung des Slopes durch den aktuellen Preis
+- Binäre Label: 1 = Up, 0 = Down
 
 Damit handelt es sich um ein Short-Term Crypto Trend Prediction Problem.
 
 **Input Features**
 
-Wir verzichten bewusst auf unnötig viele Indikatoren und konzentrieren uns auf wenige, erklärbare Features. Wenn wir uns sicherer fühlen, erweitern wir es natürlich.
+Wir nutzen ETH-Features zur Vorhersage von BTC-Targets
 
-Preisbasierte Features
-- Normalisierte Close-Preise
-- Log-Returns über 1 Minute
-
-Trend-Features
-- Normalisiertes exponential moving average (EMA) von t=[5, 10, 15, 20, 30, 60, 120, 240] minuten
-- EMA-Differenz (Trendrichtung)
-- Slope von EMA (Trendschärfe)
-
-Volumen-Feature
-- Normalisiertes Volumen
+Warum?
+- Vermeidung von Data Leakage
+- Reduktion von Overfitting
+- Nutzen der hohen Korrelation zwischen ETH und BTC
 
 ## Procedure Overview:
 
-- Sammeln von 1-Minute OHLCV-Daten der Kryptowährungen BTC/USD und ETH/USD über die Alpaca Crypto API für den Zeitraum 01.01.2021 – 15.11.2025.
-- Berechnung der Features: normalisierte Close-Preise, Log-Returns, EMAs (t = 5, 10, 15, 20, 30, 60, 120, 240 Minuten), EMA-Differenzen (z. B. EMA30 – EMA10), Slope von EMA und normalisiertes Handelsvolumen.
-- Erstellung der Zielvariable für verschiedene Zeitfenster t ∈ {5, 15, 30, 60 Minuten}, die angibt, ob der Kurs steigt (1) oder fällt (0).
-- Training eines neuronalen Netzwerks auf Basis dieser Features zur Vorhersage der kurzfristigen Trendrichtung (binäre Klassifikation) und Evaluation mittels zeitbasierter Train-/Validation-/Test-Splits.
-- Optionales Backtesting der Modellvorhersagen in einer simplen Trading-Strategie: Long-Positionen bei positiven Trendvorhersagen eröffnen und für die jeweilige Dauer t halten.
+1. Datensammlung (01.01.2021 – 15.11.2025)
+BTC/USD & ETH/USD 1-Minute OHLCV Daten via Alpaca API
+
+2. Data Preparation
+ETH: Volle Feature-Pipeline (18 Features)
+BTC: Nur Target-Berechnung (target_15m)
+
+3. Data Split 
+Splitten der Daten in Train, Validation, Test
+
+4. Feature Selector
+Korrelation zwischen Features bestimmen
+
+5. Model Training 
+Training eines neuronalen Netzwerks auf Basis dieser Features zur Vorhersage der kurzfristigen Trendrichtung
+
+6. Deployment
+- Backtesting auf Testdaten
+- Paper Trading mit Alpaca API
 
 ---
 
@@ -74,142 +77,362 @@ Visualisiert die Kursentwicklung und das Handelsvolumen von BTC und ETH und unte
 ![02_ETH_Zeitreihe.png](images/02_ETH_Zeitreihe.png)
 
 
-![02_BTC_Volumen.png](images/02_BTC_Volumen.png)
-![02_ETH_Volumen.png](images/02_ETH_Volumen.png)
 
 **Erste Erkenntnisse**
 
 - Die Close-Preise von BTC und ETH zeigen typische kurzfristige Schwankungen im Minutenbereich, wobei BTC tendenziell höhere Preisniveaus aufweist.
-- Das Handelsvolumen variiert stark über die Zeit und zeigt Spitzen zu bestimmten Handelszeiten.
 - BTC und ETH weisen teilweise ähnliche Bewegungsmuster auf, was auf eine gewisse Korrelation im Marktverhalten hinweist.
 
 ---
 
 ### Pre-Split Preparation
-Berechnet alle Features und Targets aus den Rohdaten, die später in das Modell eingehen
+Dieser Schritt berechnet alle Features und Targets aus den Rohdaten, die später in das Modell eingehen. Nach mehreren Iterationen haben wir eine Cross-Asset Strategie entwickelt, die Overfitting vermeidet.
 
-**Script**
+
+#### **Version 1: Der Fehlschlag (BTC → BTC)**
 
 [crypto_data_preparation.py](scripts/03_pre_split_prep/crypto_data_preparation.py)
 
-**Features** berechnet:
-- Normalisierte Close-Preise
-- Log-Returns über 1 Minute
-- EMAs (t = 5, 10, 15, 20, 30, 60, 120, 240 Minuten)
-- EMA-Differenzen (z. B. EMA30 – EMA10)
-- Slope von EMA
-- Rolling Volatility (t = 30 Minuten)
-- RSI (Relative Strength Index, t = 14 Minuten)
+Ansatz:
+- BTC Features → BTC Targets
+- Alle technischen Indikatoren basierend auf BTC-Preis
+
+Problem: Overfitting
 
 
-**Targets** berechnet:
-- Binäre Labels für t = [5, 10, 15, 30, 60, 120, 240] Minuten
-- 1 = Trend nach oben (positiver Slope)
-- 0 = Trend nach unten (negativer Slope)
-- Trend wird berechnet mittels linearer Regression der Close-Preise des zukünftigen Zeitfensters t 
 
-**Warum diese Features?**
+#### **Version 2: Cross-Asset Strategy (ETH → BTC)** 
 
-- Vergleichbarkeit: Absolute Preise (z.B. 20.000$ vs 60.000$) verwirren das Modell. Wir nutzen Log-Returns (prozentuale Änderungen), damit alle Datenpunkte vergleichbar bleiben.
+[crypto_data_preparation_updated.py](scripts/03_pre_split_prep/crypto_data_preparation_updated.py)
 
-- Rauschen filtern: Minuten-Charts sind sehr chaotisch. EMAs (gleitende Durchschnitte) glätten den Kurs, um den echten Trend sichtbar zu machen.
+**Neue Strategie:**
+- ETH Features → BTC Targets
+- Nutzt die hohe Korrelation zwischen ETH und BTC
+- Vermeidet Data Leakage komplett
 
-- Marktpsychologie (RSI): hilft dem Modell zu erkennen, ob der Markt "überkauft" oder "überverkauft" ist – wichtige Signale für Trendwenden.
+**Warum das funktioniert:**
+- ETH und BTC bewegen sich oft gemeinsam (Market Correlation)
+- ETH-Signale können BTC-Bewegungen antizipieren
 
-- Risiko (Volatilität): "Nervösität" des Marktes messen. Das Modell lernt so, zwischen ruhigen Phasen und explosiven Ausbrüchen zu unterscheiden.
 
-- Normalisierung: Wir skalieren alle Werte auf eine ähnliche Größe (Z-Score), damit das neuronale Netz schneller lernt.
 
-**Technische Umsetzung**
+#### **Features Berechnet (15 ETH Features + 3 Cross-Asset)**
 
-Speed: Statt 2,5 Millionen Zeilen einzeln zu berechnen (was Stunden dauert), nutzen wir Vektorisierung. Damit werden alle Berechnungen gleichzeitig ausgeführt (Dauer: wenige Sekunden).
+##### **1. ETH Base Features (15)**
+| Feature | Beschreibung | Warum wichtig? |
+|---------|--------------|----------------|
+| `eth_log_return` | 1-Minuten Returns | Momentum |
+| `eth_ema_10/30/60` | Gleitende Durchschnitte | Multi-Timeframe Trends |
+| `eth_ema_30_10` | EMA Differenz | Trend-Stärke |
+| `eth_ema10_slope` | EMA Steigung | Trend-Beschleunigung |
+| `eth_volatility_30` | Rolling Volatilität | Marktrisiko |
+| `eth_rsi_14_norm` | Relative Strength Index | Overbought/Oversold |
+| `eth_macd_hist` | MACD Histogram | Momentum Crossovers |
+| `eth_bb_position` | Bollinger Band Position | Relative Price Location |
+| `eth_atr_pct` | Average True Range | Volatility für Stop-Loss |
+| `eth_roc_5/10` | Rate of Change | Kurzfrist-Momentum |
+| `eth_stoch_k/d` | Stochastic Oscillator | Momentum Extremes |
 
-**Ergebnisse der Datenanalyse (Findings)**
-
-Balance: 
-- Es gibt fast genau gleich viele "Up"- wie "Down"-Phasen (50/50 Verteilung). Das ist ideal, weil das Modell so nicht einseitig lernt.
-
-![class_balance.png](images/04_class_balance.png)
-
-Korrelation & Feature-Analyse:
-
-- Redundanz (Der rote Block): Die starke Korrelation (≈ 1.00) zwischen den verschiedenen EMAs (ema_10, ema_60, ema_240) bestätigt, dass absolute Preis-Indikatoren fast identische Informationen liefern. Der langfristige Trend dominiert hier.
-
-- Volatilität: Die Zeile volatility_30 zeigt nahezu keine Korrelation (0.00) zu den anderen Features. Dies beweist, dass die Volatilität eine statistisch unabhängige Information (Marktrisiko) liefert, die in den Trend-Daten nicht enthalten ist. Das ist ideal für das neuronale Netz.
-
-- Momentum-Bestätigung (RSI): Der rsi_14_norm zeigt eine sinnvolle Korrelation zum Slope (0.67), aber keine Korrelation zum absoluten Preis-Level (EMAs ≈ 0.00). Er fungiert als Bindeglied zwischen kurzfristigem Momentum und überkauften Zuständen.
-
-![correlation_matrix.png](images/04_correlation_matrix.png)
+##### **2. Cross-Asset Features (3)**
+| Feature | Beschreibung | Signal |
+|---------|--------------|--------|
+| `btc_eth_ratio` | BTC/ETH Preisverhältnis | Asset Rotation |
+| `btc_eth_return_diff` | Return Differenz | Divergenz Events |
+| `btc_eth_corr_60` | 60min Rolling Korrelation | Markt-Regime |
 
 ---
 
-### Step 04 – Split & Shuffle Data
+#### **Targets Berechnet (8 BTC Zeitfenster)**
 
-[04_crypto_split_data.py](scripts/04_split_data/04_crypto_split_data.py)
+Binäre Labels für t ∈ {5, 10, 15, 20, 30, 60, 120, 240} Minuten:
+- **1** = Trend nach oben (positiver Slope via Linear Regression)
+- **0** = Trend nach unten (negativer Slope)
 
-Nach der Feature- und Target-Generierung werden die Daten für BTCUSD und ETHUSD getrennt einem strikt zeitbasierten Split unterzogen. Dabei dienen die ältesten 70 % der Daten als Trainingsmenge, die folgenden 15 % als Validierungsmenge und die jüngsten 15 % als Testmenge. Dieser chronologische Ansatz verhindert Data Leakage und stellt sicher, dass das Modell ausschließlich aus Vergangenheitsdaten lernt und auf späteren Marktphasen evaluiert wird.
+**Trend-Berechnung:**
+```python
+# Sliding Window über zukünftige Preise
+windows = sliding_window(btc_prices, window=15)
 
-Im nächsten Schritt werden die symbolweisen Splits zu globalen Datensätzen zusammengeführt:
+# Linear Regression Slope für jedes Fenster
+slope = linregress(x=[0,1,...,14], y=window_prices)
 
-* `Train_global = BTC_train + ETH_train`
-* `Val_global   = BTC_val   + ETH_val`
-* `Test_global  = BTC_test  + ETH_test`
+# Normalisierung durch aktuellen Preis
+normalized_slope = slope / current_price
 
-Anschließend erfolgt ein globales Shuffling der drei Datensätze (`sample(frac=1.0, random_state=42)`). Dadurch enthalten die Trainingsbatches später Daten aus unterschiedlichen Zeitabschnitten und aus beiden Assets, was die Generalisierung des Modells verbessert und Overfitting reduziert.
+# Binäres Label
+target_15m = 1 if normalized_slope > 0 else 0
+```
 
-### Final Output Sizes
+**Gewähltes Target:** `target_15m` (15 Minuten)
 
-| Dataset                   | Rows      |
-| ------------------------- | --------- |
-| **Train (shuffled)**      | 3 167 097 |
-| **Validation (shuffled)** | 678 663   |
-| **Test (shuffled)**       | 678 665   |
 
-Gespeicherte Dateien:
+---
 
-* `crypto_train_shuffled.parquet`
-* `crypto_val_shuffled.parquet`
-* `crypto_test_shuffled.parquet`
+#### **Individual Feature Behavior**
 
-### Split & Shuffle Flowchart
+Um zu verstehen **was jedes Feature tut**, haben wir detaillierte Analysen durchgeführt:
+
+[inspect_prep_data_updated.py](scripts/03_pre_split_prep/inspect_prep_data_updated.py)
+
+[feature_analysis_individual.py](scripts/03_pre_split_prep/feature_analysis_individual.py)
+
+##### **Beispiel: RSI (Relative Strength Index)**
+![042_rsi.png](images/feature_analysis/042_rsi.png)
+
+**Was es zeigt:**
+- Oben: RSI über Zeit mit Overbought (>70) / Oversold (<30) Zonen
+- Unten: Distribution → leichter Bullish Bias (2021 war Bullmarkt)
+
+**Interpretation:**
+- RSI >70: Markt überkauft → Warnung vor Korrektur
+- RSI <30: Markt überverkauft → Potentielle Kaufchance
+- Mean ~50: Balancierter Indikator
+
+##### **Beispiel: MACD (Moving Average Convergence Divergence)**
+![042_macd.png](images/feature_analysis/042_macd.png)
+
+**Was es zeigt:**
+- Oben: Preis mit MACD Crossover Signals (grün=Buy, rot=Sell)
+- Unten: MACD Histogram (grün=bullish momentum, rot=bearish)
+
+**Interpretation:**
+- Crossovers = Trend-Wenden
+- Histogram-Größe = Momentum-Stärke
+
+##### **Alle 11 Feature-Plots:**
+1. **Log Returns** - Preisbewegungen
+2. **EMAs** - Multi-Timeframe Trends
+3. **EMA Difference** - Trend-Stärke
+4. **EMA Slope** - Trend-Beschleunigung
+5. **Volatility** - Marktrisiko
+6. **RSI** - Overbought/Oversold
+7. **MACD** - Momentum Crossovers
+8. **Bollinger Bands** - Volatility Channels
+9. **ATR** - True Volatility
+10. **ROC** - Rate of Change
+11. **Stochastic** - Momentum Extremes
+
+Alle Plots verfügbar in: [feature_analysis](images/feature_analysis)
+
+---
+
+#### **Data Quality & Balance**
+
+##### **Class Balance Check**
+![Class Balance](images/04_class_balance_updated.png)
+
+**Ergebnis:**
+- Alle Targets zeigen ~50/50 Split (49-51%)
+- Kein Class Imbalance Problem
+- Längere Zeitfenster (240m) zeigen leichten Upward Bias (50.9%)
+
+##### **Cross-Asset Features**
+![Cross-Asset Features](images/04_cross_asset_features.png)
+
+**BTC/ETH Ratio:**
+- Zeigt Asset-Rotation zwischen BTC und ETH
+- Starke Bewegungen = Divergenz Events
+
+**Return Difference:**
+- Oszilliert um 0 → meist gemeinsame Bewegung
+- Spikes = Decorrelation (Trading Opportunities!)
+
+**Correlation (60min):**
+- Meist 0.6-0.8 → hohe Co-Movement
+- Dips auf 0 oder negativ → Regime-Wechsel
+---
+
+
+## **Data Split**
+
+ [04_crypto_split_data2.py](scripts/04_split_data/04_crypto_split_data2.py)
+
+---
+
+### **Was wir FALSCH gemacht haben**
 
 ![Step 04 Flowchart](images/04_final_flowchart.png)
 
+**Erster Versuch:** Standard ML Split mit Shuffling
 
-### Split ohne shuffle
+```python
+# 04_crypto_split_data.py (DEPRECATED)
+df_shuffled = df.sample(frac=1.0, random_state=42)  # ❌ FEHLER!
+train = df_shuffled[:70%]
+val = df_shuffled[70%:85%]
+test = df_shuffled[85%:]
+```
 
-[04_crypto_split_data2.py](scripts/04_split_data/04_crypto_split_data2.py)
+**Das Problem:**
+- Data Leakage: Future-Information landet in Training-Set
+- Unrealistische Evaluation: Modell "weiß" was in der Zukunft passiert
+- Overfitting, vor allem weil ETH mit gesplittet wurde
 
-Für unser Time-Series-Problem wird die Datenaufteilung zeitbasiert durchgeführt. Ein zufälliger Split ist nicht erlaubt, da er zukünftige Informationen in die Vergangenheit bringen würde.
+**Beispiel-Szenario:**
+```
+Original Timeline: Jan 2021 → Nov 2025
 
-**Grundidee:**
-- BTC ist unser Target (Trendvorhersage).
-- ETH wird als Feature genutzt, um Marktinformationen hinzuzufügen.
-- BTC bestimmt die Zeitachse, ETH wird synchronisiert und als Feature hinzugefügt.
+Nach Shuffle:
+Train:  [März 2023, Jan 2021, Nov 2025, ...]  ← Future data gemischt!
+Val:    [Juni 2022, Aug 2025, Feb 2021, ...]
+Test:   [Dez 2024, Apr 2021, Sep 2023, ...]
+```
 
-**Warum dieser Split sicher ist:**
-- Chronologische Trennung verhindert Data Leakage.
-- Die ETH-Daten werden korrekt zur BTC-Serie gematcht, ohne Zeilen zu verlieren.
-- Modelle sehen nur Informationen aus der Vergangenheit für Vorhersagen in die Zukunft.
+Das Modell würde mit Daten aus 2025 trainieren und auf 2021 testen! 
 
-**Split-Verhältnisse:**
-70% Train
-15% Validation
-15% Test
+---
 
-### Model Training
+### **Die Lösung: Strikt Chronologischer Split**
+
+
+**Korrekte Implementation:**
+
+```python
+# 1. Sort by timestamp (KRITISCH!)
+df = df.sort_values('timestamp').reset_index(drop=True)
+
+# 2. Chronological split (NO SHUFFLE!)
+n = len(df)
+train = df.iloc[  :int(n*0.70)]  # Oldest 70%
+val   = df.iloc[int(n*0.70):int(n*0.85)]  # Middle 15%
+test  = df.iloc[int(n*0.85):]    # Newest 15%
+```
+
+**Timeline (korrekt):**
+
+```
+├─────────── TRAIN (70%) ──────────┤──VAL(15%)─┤──TEST(15%)─┤
+2021-01-01          2024-06-15   2025-03-01   2025-11-15
+   ↓                   ↓              ↓            ↓
+  Past            Mid-Past      Recent Past    Latest
+```
+
+---
+
+### **Split-Verhältnisse & Statistiken**
+
+| Dataset | Rows | Zeitraum | % |
+|---------|------|----------|---|
+| **Train** | 1,591,668 | 2021-01-01 → 2024-06-15 | 70% |
+| **Val** | 340,668 | 2024-06-16 → 2025-03-01 | 15% |
+| **Test** | 340,668 | 2025-03-02 → 2025-11-15 | 15% |
+
+
+---
+
+### **Class Balance Check**
+
+Nach dem Split: Ist `target_15m` noch balanciert?
+
+```
+Train:  Down=49.8%  Up=50.2%   Balanced!
+Val:    Down=50.1%  Up=49.9%   Balanced! 
+Test:   Down=49.9%  Up=50.1%   Balanced!
+```
+
+**Wichtig:** Balance bleibt über alle Splits erhalten → Kein Resampling nötig!
+
+---
+
+### **Anti-Leakage Validation**
+
+**Test:** Gibt es zeitliche Überlappung?
+
+```python
+assert train['timestamp'].max() < val['timestamp'].min()
+assert val['timestamp'].max() < test['timestamp'].min()
+```
+
+**Passed:** Keine zeitliche Überlappung zwischen Splits
+
+---
+
+## Feature Selector
+
+![04_correlation_matrix_updated.png](images/04_correlation_matrix_updated.png)
+
+**Insights:**
+1. EMA Block (oben links, dunkelrot):
+- EMAs sind hoch korreliert (1.00) → Redundanz
+
+2. Momentum Cluster (Mitte):
+- RSI, MACD, ROC, Stochastic zeigen moderate Korrelation (0.5-0.9)
+- Gut: Sie messen ähnliche Konzepte (Momentum) aber nicht identisch
+
+3. Volatilität (eth_volatility_30):
+- Fast null Korrelation zu allen anderen Features!
+- Perfekt: Liefert unique Information über Marktrisiko
+
+4. Cross-Asset Features (unten):
+- btc_eth_return_diff ist negativ korreliert (-0.57) mit eth_log_return
+- btc_eth_corr_60 zeigt schwache Korrelation → gutes Diversifikations-Signal
+
+---
+
+## Model Training
 
 [07_feed_forward.py](scripts/07_model_training/07_feed_forward.py)
 
-- Lädt die Experimentkonfiguration und die Featureliste (features.txt).
-- Lädt Trainings-, Validierungs- und Testdaten aus Parquet-Dateien und normalisiert die Features mit StandardScaler.
-- Erstellt ein MLP mit 2 versteckten Schichten (128 und 64 Neuronen), ReLU-Aktivierungen, Dropout 0.3 und einem Output für binäre Klassifikation.
-- Trainiert mit BCEWithLogitsLoss, AdamW-Optimizer (LR 0.001, Weight Decay 0.0001), Batch-Größe 2048 und Early Stopping nach 7 Epochen ohne Verbesserung.
+[07_lstm.py](scripts/07_model_training/07_lstm.py)
+
+
+**Erste Idee:** LSTM für Time-Series Data 
+
+**Architecture:**
+```python
+SEQ_LENGTH = 30  # Minutes of history to look back
+BATCH_SIZE = 256  # Smaller for LSTM (memory)
+LSTM_HIDDEN = 128
+LSTM_LAYERS = 1
+DROPOUT = 0.6
+LR = 5e-4  # Lower for LSTM
+WEIGHT_DECAY = 5e-4
+EPOCHS = 50
+PATIENCE = 10
+```
+
+**Ergebnis nach 11 Epochs:**
+
+![training_metrics_lstm_overfitting.png](models/exp1/training_metrics_lstm_overfitting.png)
+
+**Das Problem:**
+-  Train Acc: 52% → 59% (kontinuierlich steigend)
+-  Val Acc: 51% (stagniert komplett)
+-  Val Loss: 0.69 → 0.75 (EXPLODIERT ab Epoch 4!)
+
+**Diagnose: Klassisches Overfitting sogar mit 0.6 dropout**
+
+**Entscheidung:** LSTM verworfen → Switch zu simpler MLP
+
+---
+
+### **Versuch 2: MLP - Erste Version**
+
+**Neue Strategie:** Weniger Parameter, mehr Regularisierung
+
+**Architecture:**
+```python
+MLP(
+    input=18,
+    batch_size=2048,
+    lr=0.001,
+    weight_decay=0.0001,
+    hidden1=128,
+    hidden2=64,
+    dropout=0.3,  # Zu niedrig!
+    output=1
+)
+```
+- Lädt Trainings-, Validierungs- und Testdaten aus Parquet-Dateien und normalisiert die Features mit StandardScaler
+- Erstellt ein MLP mit 2 versteckten Schichten (128 und 64 Neuronen), ReLU-Aktivierungen, Dropout 0.3 und einem Output für binäre Klassifikation
+- Trainiert mit BCEWithLogitsLoss, AdamW-Optimizer (LR 0.001, Weight Decay 0.0001), Batch-Größe 2048 und Early Stopping nach 7 Epochen ohne Verbesserung
 - Speichert das beste Modell (best_model.pt) und den Feature-Scaler (feature_scaler.pkl)
+
+**Problem:** Immer noch Overfitting (Val > Test)
 
 ![img.png](models/exp1/07_overfitting_problem.png)
 
-
+---
 ### Model Testing
 
 [07_feed_forward.py](scripts/07_model_training/07_feed_forward.py) (Die evaluierung methode ist da)
@@ -263,19 +486,17 @@ Recall (51.50%):
 > "Model catches 51.50% of all Up moves"
 
 ![07_dropout0.6_LR5e-4.png](scripts/08_model_testing/07_dropout0.6_LR5e-4.png)
+---
+## Deployment
 
-### Deployment
-[09_backtesting.py](scripts/09_deployment/09_backtesting.py)
 
-[09_paper_trading.py](scripts/09_deployment/09_paper_trading.py)
-
-![Equity Curve: ML Model vs Buy & Hold](images/09_equitycurve_.png)
-
-## Trading Bot Development 
+### Trading Bot Development 
 
 [09_paper_trading_updated.py](scripts/09_deployment/09_paper_trading_updated.py)
 
 [09_Backtesting_val.py](scripts/09_deployment/09_Backtesting_val.py)
+
+[09_paper_trading.py](scripts/09_deployment/09_paper_trading.py)
 
 [Live_performance_analyzer.py](scripts/09_deployment/Live_performance_analyzer.py)
 
@@ -515,3 +736,152 @@ Problem: Bot checked nur alle 60 Sekunden → Verpasste den optimalen SL-Trigger
 Aber: Die Failsafe Logic funktionierte! Bot erkannte SL-Verletzung und verkaufte automatisch.
 
 ![portfolie_2wochen.png](images/portfolie_2wochen.png)
+
+---
+
+### **Phase 7: Trading Filters - Selective Entry Strategy**
+
+[09_paper_trading_filters.py](scripts/09_deployment/09_paper_trading_filters.py)
+
+**Problem mit v2.1:**
+Der Bot tradet immer, wenn Model bullish ist (Prob > 0.515), unabhängig von Marktbedingungen.
+
+**Das führt zu:**
+- Trades während extremer Volatilität (Flash Crashes)
+- Trades gegen starke Downtrends (catching falling knives)
+- Unnötige Losses in ungünstigen Marktphasen
+
+---
+
+### **Die Lösung: Market Condition Filters**
+
+**Neue Klasse:**
+```python
+class TradingFilters:
+    def __init__(self, max_volatility=0.020, min_trend=-0.005):
+        self.max_volatility = max_volatility  # Max 2% volatility
+        self.min_trend = min_trend            # Min -0.5% trend
+        self.stats = {
+            'total': 0, 
+            'passed': 0, 
+            'blocked_vol': 0, 
+            'blocked_trend': 0
+        }
+    
+    def should_trade(self, df_combined):
+        # 1. Check Volatility
+        volatility = df['eth_log_return'].rolling(30).std().iloc[-1]
+        if volatility > self.max_volatility:
+            return False, "Too volatile"
+        
+        # 2. Check Trend
+        ema_60 = df['eth_ema_60'].iloc[-60:]
+        trend = (ema_60.iloc[-1] - ema_60.iloc[0]) / ema_60.iloc[0]
+        if trend < self.min_trend:
+            return False, "Strong downtrend"
+        
+        return True, "OK"
+```
+
+---
+
+### **Filter-Logik im Trading Cycle**
+
+**Neue Entry-Bedingungen:**
+
+```python
+# 1. Model Prediction
+prob = model.predict(features)
+
+# 2. *** CHECK FILTERS (NEU!) ***
+should_trade, reason = filters.should_trade(df_combined)
+
+if not should_trade:
+    logger.info(f"🚫 FILTERS BLOCK: {reason}")
+    return  # NO TRADE!
+
+# 3. Original Logic (nur wenn Filter passed)
+if prob > 0.515:
+    place_buy_order()
+```
+
+---
+
+### **Die 2 Filter im Detail**
+
+**Filter 1: Volatility Limiter**
+
+**Zweck:** Verhindert Trades während extremer Volatilität
+
+```python
+# 30-period rolling std of log returns
+volatility = eth_log_return.rolling(30).std()
+
+if volatility > 0.020:  # > 2%
+    BLOCK TRADE
+```
+
+**Warum?**
+- High Volatility = Hohe Slippage
+- Flash Crashes unpredictable
+- Model nicht trainiert auf extreme Moves
+
+**Beispiel-Szenario:**
+```
+Normal Day:    Vol = 0.012 (1.2%) → ✅ TRADE
+Volatile Day:  Vol = 0.035 (3.5%) → 🚫 BLOCK
+```
+
+---
+
+**Filter 2: Trend Strength**
+
+**Zweck:** Vermeidet Trades gegen starke Downtrends
+
+```python
+# Calculate 60-period EMA slope
+ema_60_change = (ema_60[-1] - ema_60[0]) / ema_60[0]
+
+if ema_60_change < -0.005:  # < -0.5%
+    BLOCK TRADE
+```
+
+**Warum?**
+- "Don't catch a falling knife"
+- Strong downtrends haben Momentum
+- Model bullish != Trend reversal
+
+**Beispiel-Szenario:**
+```
+Slight Dip:    Trend = -0.3% → ✅ TRADE (potential bounce)
+Strong Dump:   Trend = -1.2% → 🚫 BLOCK (wait for stabilization)
+```
+
+---
+
+### **Trade Quality Comparison**
+
+**Beispiel Trade Sequences:**
+
+**Without Filters (Account 1):**
+```
+Trade 1: Entry $89,500, Exit $90,200 (+0.78%) ✅
+Trade 2: Entry $90,150, Exit $89,800 (-0.39%) ❌ (high vol)
+Trade 3: Entry $89,750, Exit $89,200 (-0.61%) ❌ (downtrend)
+Trade 4: Entry $89,100, Exit $89,650 (+0.62%) ✅
+
+Net: +0.40% 
+```
+
+**With Filters (Account 2):**
+```
+Cycle 1: Model bullish, but volatility=2.8% →  SKIP
+Cycle 2: Model bullish, but trend=-0.8% → SKIP
+Trade 1: Entry $89,500, Exit $90,200 (+0.78%) ✅
+Cycle 3: Model bullish, but volatility=2.1% → SKIP
+Trade 2: Entry $90,800, Exit $91,600 (+0.88%) ✅
+
+Net: +1.66% 
+```
+
+**Result:** Selektivität = Profitabilität
