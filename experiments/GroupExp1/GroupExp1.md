@@ -735,7 +735,7 @@ Problem: Bot checkt nur alle 60 Sekunden → Verpasste den optimalen SL-Trigger 
 
 Aber: Die Failsafe Logic funktionierte! Bot erkannte SL-Verletzung und verkaufte automatisch.
 
-![portfolie_2wochen.png](images/portfolie_2wochen.png)
+![portfolio_4wochen.png](images/portfolio_4wochen.png)
 
 ---
 
@@ -885,3 +885,5 @@ Net: +1.66%
 ```
 
 **Result:** Selektivität = Profitabilität
+
+![portfolio_filters_2wochen.png](images/portfolio_filters_2wochen.png)
