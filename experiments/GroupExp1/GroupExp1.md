@@ -430,7 +430,7 @@ MLP(
 
 **Problem:** Immer noch Overfitting (Val > Test)
 
-![img.png](models/exp1/07_overfitting_problem.png)
+![07_overfitting_problem.png](scripts/08_model_testing/07_overfitting_problem.png)
 
 ---
 ### Model Testing
