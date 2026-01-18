@@ -21,20 +21,20 @@ Warum?
 ## Procedure Overview:
 
 1. Datensammlung (01.01.2021 – 15.11.2025)
-BTC/USD & ETH/USD 1-Minute OHLCV Daten via Alpaca API
+- BTC/USD & ETH/USD 1-Minute OHLCV Daten via Alpaca API
 
 2. Data Preparation
-ETH: Volle Feature-Pipeline (18 Features)
-BTC: Nur Target-Berechnung (target_15m)
+- ETH: Volle Feature-Pipeline (18 Features)
+- BTC: Nur Target-Berechnung (target_15m)
 
 3. Data Split 
-Splitten der Daten in Train, Validation, Test
+- Splitten der Daten in Train, Validation, Test
 
 4. Feature Selector
-Korrelation zwischen Features bestimmen
+- Korrelation zwischen Features bestimmen
 
 5. Model Training 
-Training eines neuronalen Netzwerks auf Basis dieser Features zur Vorhersage der kurzfristigen Trendrichtung
+- Training eines neuronalen Netzwerks auf Basis dieser Features zur Vorhersage der kurzfristigen Trendrichtung
 
 6. Deployment
 - Backtesting auf Testdaten
